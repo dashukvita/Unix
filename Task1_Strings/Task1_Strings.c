@@ -93,7 +93,7 @@ int countWord(char *buffer) {
             default:
                 if (!isspace(*p)){ isWord = 1;}
                 else{
-                  if (isWord) {count +=1; isWord = 0;}
+                    if (isWord) {count +=1; isWord = 0;}
                 }
                 break;
         }
@@ -105,7 +105,7 @@ int countWord(char *buffer) {
 }
 
 //считаем текст
-char * inputLine(int startSize, FILE* file) {
+char * inputLine(int startSize) {
     char *str;
     int ch;
     int len = 0;
@@ -113,7 +113,7 @@ char * inputLine(int startSize, FILE* file) {
     if (!str) {
         return str;
     }
-    while ((ch = fgetc(file)) != EOF) {
+    while ((ch = getchar()) != EOF) {
         str[len++] = ch;
         if (len == startSize) {
             str = realloc(str, sizeof(char) * (startSize += 16));
@@ -156,8 +156,7 @@ void deleteBufferDic(char *buffer, char **dictionary, int countword)
 
 int main(int argc, const char * argv[])
 {
-    FILE* file = fopen("/Users/user/Desktop/file.txt","r");
-    char * buffer = inputLine(10, file);
+    char * buffer = inputLine(10);
     printf("Введенная строка= \"%s\".\n", buffer);
     int countword = countWord(buffer);
     printf("Количество слов %i\n", countword);
