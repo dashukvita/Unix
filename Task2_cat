@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+/* реализация cat - вывод содержимого файла */
+
+const int BUFFER_SIZE = 4096; // буффер на 4 кБ (может быть любой длины, например 1)
+
+void cat(char* name) {
+    int file_desc; // дескриптор файла
+    char buf[BUFFER_SIZE];
+    long nread; // число байт, прочитанных в буффер
+    
+    // проверка правильно ли открыли файл
+    if ((file_desc = open(name, O_RDONLY)) == -1) {
+        perror(name);
+        _exit(0);
+    }
+    
+    while ((nread = read(file_desc, buf, sizeof buf)) > 0) {
+        long written;
+        if ((written = write(STDOUT_FILENO, buf, nread)) < 1) { // пишем в поток stdout
+            perror("Error writing.");
+        }
+    }
+}
+
+void emptyCat() {
+    char buf[BUFFER_SIZE];
+    long nread; // число байт, прочитанных в буффер
+    
+    while ((nread = read(STDIN_FILENO, buf, sizeof buf)) > 0) {
+        long written;
+        if ((written = write(STDOUT_FILENO, buf, nread)) < 1) {
+            perror("Error writing.");
+        }
+    }
+}
+
+int main(int args, char** argv) {
+    if (args == 1) {
+        emptyCat();
+    } else {
+        for (int i = 1; i < args; i++) {
+            cat(argv[i]);
+        }
+    }
+}
