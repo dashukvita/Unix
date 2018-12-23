@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+/* реализация mv - переименование, перемещение файла */
+
+const int BUFFER_SIZE = 4096; // буффер на 4 кБ (может быть любой длины, например 1)
+
+void makeMV(int from, int to) {
+    char buf[BUFFER_SIZE];
+    long nread; // число байт, прочитанных в буффер
+    
+    while ((nread = read(from, buf, sizeof buf)) > 0) {
+        long written;
+        if ((written = write(to, buf, nread)) < 1) {
+            perror("bed write");
+        }
+    }
+}
+
+void mv(char* fromF, char* toF) {
+    int fromFD; // файловый дескриптор файла для чтения
+    int toFD; // файловый дескриптор файла для записи
+    
+    // проверка правильно ли открыли файл для чтения
+    if ((fromFD = open(fromF, O_RDONLY)) == -1) {
+        perror(fromF);
+        exit(-1);
+    }
+    
+    if ((toFD = open(toF, O_WRONLY)) == -1) {
+        // если второго файла нет - переименуем первый
+        rename(fromF, toF);
+        return;
+    }
+    
+    // проверим совпадение индексных дескрипторов
+    struct stat statvFrom;
+    struct stat statvTo;
+    if (lstat(fromF, &statvFrom)) {
+        perror(fromF);
+        return;
+    }
+    if (lstat(toF, &statvTo)) {
+        perror(toF);
+        return;
+    }
+    //printf("%d - %d \n", statvFrom.st_ino, statvTo.st_ino);
+    if (statvFrom.st_ino == statvTo.st_ino) {
+        printf("Error: the same link.");
+        return;
+    }
+    
+    // если все нормально, перемещаем
+    makeMV(fromFD, toFD);
+    
+    // закрываем ресурсы
+    remove(fromF);
+    close(toFD);
+    
+    printf("File successfully moved.");
+}
+
+int main(int args, char** argv) {
+    if (args == 3) {
+        mv(argv[1], argv[2]);
+    } else {
+        perror("Illigal number of args.");
+    }
+}
